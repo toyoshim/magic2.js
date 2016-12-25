@@ -85,7 +85,7 @@ const translate = {
     this.dx = parameters[P_DX];
     this.dy = parameters[P_DY];
     this.dz = parameters[P_DZ];
-
+   
     const math = Math;
     const cx = parameters[P_CX] - position;
     const cy = parameters[P_CY];
@@ -258,7 +258,7 @@ class Magic2 {
         }
 
         // Perspective
-        var maxz = this[_].depth.maxz;
+        var maxz = this[_].depth.maxz + this[_].depth.minz;
         for (i = 0; i < pctx3; i += 3) {
           var nz = vertices[i + 2];
           if (nz <= 0 || maxz < nz)
@@ -370,6 +370,11 @@ class Magic2 {
     this[_].clients.push(client);
   }
 
+  /**
+   * Magic2 API: Strokes lines.
+   * @param {Array<number>} x points, [x1, x2, ..., xN]
+   * @param {Array<number>} y points, [y1, y2, ..., yN]
+   */
   line (x, y) {
     const c = this[_].contexts[this[_].apage];
     const n = x.length;
@@ -401,6 +406,13 @@ class Magic2 {
     }
   }
 
+  /**
+   * Magic2 API: Fill a box.
+   * @param {number} x1 x1
+   * @param {number} y1 y1
+   * @param {number} x2 x2
+   * @param {number} y2 y2
+   */
   boxFull (x1, y1, x2, y2) {
     const left = Math.min(x1, x2);
     const top = Math.min(y1, y2);
@@ -430,6 +442,13 @@ class Magic2 {
     }
   }
 
+  /**
+   * Magic2 API: Sets window rectangle.
+   * @param {number} x1 x1
+   * @param {number} y1 y1
+   * @param {number} x2 x2
+   * @param {number} y2 y2
+   */
   setWindow (x1, y1, x2, y2) {
     this[_].window.x = x1;
     this[_].window.y = y1;
@@ -437,15 +456,37 @@ class Magic2 {
     this[_].window.h = y2 - y1;
   }
 
+  /**
+   * Magic2 API: Clears screen.
+   */
   cls () {
     const c = this[_].contexts[this[_].apage];
     c.clearRect(0, 0, c.canvas.width, c.canvas.height);
   }
 
+  /**
+   * Magic2 API: Sets translate parameters.
+   * @param {number} num parameter ID
+   *     0: CX, 1: CY, 2: CZ, 3: DX, 4: DY, 5: DZ, 6: HEAD, 7: PITCH, 8: BANK
+   *       CX/   CY/  CZ: move
+   *       DX/   DY/  DZ: center address of rotation
+   *     HEAD/PITCH/BANK: rotation
+   * @param {number} data parameter
+   */
   set3dParameter (num, data) {
     this[_].parameters[num] = data;
   }
 
+  /**
+   * Magic2 API: Sets a 3D object data. The stored object will be translated
+   * with 3D parameters, and will be drawn by translate2dTo3d().
+   * @param {number} pct number of vertices
+   * @param {Int16Array} vertices in [x1, y1, z1, x2, ..., zN]
+   * @param {number} lct number of lines
+   * @param {Uint16Array} indices of start and end point vertices in
+   *     [s1, e1, s2, ..., eN]
+   * @param {number} color palette code (optional)
+   */
   set3dData (pct, vertices, lct, indices, color) {
     this[_].data.pct = pct;
     this[_].data.vertices = vertices;
@@ -454,6 +495,11 @@ class Magic2 {
     this[_].data.color = color !== undefined ? color : this[_].color;
   }
 
+  /**
+   * Magic2 API: Parses a 3D object data and sets it.
+   * @param {Uint8Array} memory image
+   * @param {number} addr address of the 3D object in |memory|
+   */
   set3dRawData (memory, addr) {
     const base = addr;
     this[_].data.pct = mem_read_u16be(memory, addr);
@@ -480,6 +526,10 @@ class Magic2 {
     return addr - base;
   }
 
+  /**
+   * Magic2 API: Converts a prepared 3D object vertices and draws it onto the
+   * offscreen.
+   */
   translate3dTo2d () {
     if (this[_].vr) {
       this[_].draw(this.context(1));
@@ -490,7 +540,7 @@ class Magic2 {
   }
 
   /**
-   * Magic2 API: Swap offscreen and show rendered 3D data. Internnaly page 0
+   * Magic2 API: Swaps offscreen and show rendered 3D data. Internnaly page 0
    * and 1 are used for rendering 3D objects in offscreen. translate3dTo2d()
    * actually renders a 3D object into the offscreen, and display2d() swap
    * the active page and offscreen page each other.
@@ -500,6 +550,7 @@ class Magic2 {
     this[_].fgcontext = this[_].bgcontext;
     this[_].bgcontext = previous;
     const fg = this[_].contexts[this[_].fgcontext];
+    const bg = this[_].contexts[this[_].bgcontext];
     if (this[_].vr) {
       var c1 = this.context(1);
       var c2 = this.context(2);
@@ -507,15 +558,21 @@ class Magic2 {
         client(fg, c1);
         client(fg, c2);
       }
+      bg.clearRect(0, 0, bg.canvas.width, bg.canvas.height);
+      bg.fillStyle = this[_].palette[0][c1.color];
+      bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
+      bg.fillStyle = this[_].palette[0][c2.color];
+      bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
     } else {
       var c = this.context(0);
       for (var client of this[_].clients)
         client(fg, c);
+      bg.clearRect(0, 0, bg.canvas.width, bg.canvas.height);
+      bg.fillStyle = this[_].palette[0][c.color];
+      bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
     }
     fg.canvas.style.display = 'block';
-    const bg = this[_].contexts[this[_].bgcontext];
     bg.canvas.style.display = 'none';
-    bg.clearRect(0, 0, bg.canvas.width, bg.canvas.height);
   }
 
   /**
