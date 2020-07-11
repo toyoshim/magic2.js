@@ -116,8 +116,7 @@
       this.y = m[1][0] * x + m[1][1] * y + m[1][2] * z + m[1][3];
       this.z = m[2][0] * x + m[2][1] * y + m[2][2] * z + m[2][3];
     }
-  }; // TODO: Composite ctranslation and camera matrix.
-
+  };
   const camera = {
     x: 0.0,
     y: 0.0,
@@ -152,10 +151,218 @@
       this.z = m[2][0] * x + m[2][1] * y + m[2][2] * z;
     }
   };
+  const VSHADER = `
+precision mediump float;
+attribute vec3 aCoord;
+attribute vec3 aColor;
+uniform mat4 uTMat;
+uniform mat4 uPMat;
+uniform vec3 uCamera;
+varying vec3 vColor;
+
+void main() {
+  gl_Position = uPMat * uTMat * vec4(aCoord - uCamera * 100., 1.0);
+  vColor = aColor;
+}
+`;
+  const FSHADER = `
+precision mediump float;
+varying vec3 vColor;
+
+void main() {
+  gl_FragColor = vec4(vColor, 1.0);
+}
+`;
+
+  class XR {
+    constructor() {
+      this.activated = false;
+      this.session = null;
+      this.mainLoop = null;
+      this.controllers = [];
+      this.gl = null;
+      this.space = null;
+      this.views = [null, null];
+      this.program = null;
+      this.vbuffer = null;
+      this.cbuffer = null;
+      this.ibuffer = null;
+      this.coords = new Float32Array(8192 * 3);
+      this.colors = new Float32Array(8192 * 3);
+      this.nCoords = 0;
+      this.indices = new Uint16Array(8192 * 2);
+      this.nIndices = 0;
+    }
+
+    quit() {
+      this.gl = null;
+    }
+
+    async enter(mainLoop) {
+      this.mainLoop = mainLoop;
+      if (this.activated) return;
+      this.activated = true;
+      if (!navigator.xr)
+        /* global navigator */
+        return;
+      if (!(await navigator.xr.isSessionSupported('immersive-vr'))) return;
+      if (this.session) return;
+      this.session = await navigator.xr.requestSession('immersive-vr');
+      this.session.addEventListener('end', this.quit.bind(this), false);
+      this.session.addEventListener('inputsourceschange', e => {
+        for (let added of e.added) this.controllers = [added.gamepad].concat(this.controllers);
+      });
+
+      navigator.getGamepads = () => {
+        return this.controllers;
+      };
+
+      this.gl = document.getElementById('xr').getContext('webgl', {
+        xrCompatible: true
+      });
+      const layer = new XRWebGLLayer(this.session, this.gl);
+      /* global XRWebGLLayer */
+
+      this.session.updateRenderState({
+        baseLayer: layer,
+        depthFar: 10000
+      });
+      this.space = await this.session.requestReferenceSpace("local");
+      const vshader = this.gl.createShader(this.gl.VERTEX_SHADER);
+      this.gl.shaderSource(vshader, VSHADER);
+      this.gl.compileShader(vshader);
+      if (!this.gl.getShaderParameter(vshader, this.gl.COMPILE_STATUS)) console.error(this.gl.getShaderInfoLog(vshader, this.gl.COMPILE_STATUS));
+      const fshader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
+      this.gl.shaderSource(fshader, FSHADER);
+      this.gl.compileShader(fshader);
+      if (!this.gl.getShaderParameter(fshader, this.gl.COMPILE_STATUS)) console.error(this.gl.getShaderInfoLog(fshader, this.gl.COMPILE_STATUS));
+      this.program = this.gl.createProgram();
+      this.gl.attachShader(this.program, vshader);
+      this.gl.attachShader(this.program, fshader);
+      this.gl.linkProgram(this.program);
+      if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) console.error(this.gl.getProgramInfoLog(this.program));
+      this.vbuffer = this.gl.createBuffer();
+      this.cbuffer = this.gl.createBuffer();
+      this.ibuffer = this.gl.createBuffer();
+
+      const rAF = (time, frame) => {
+        this.session.requestAnimationFrame(rAF);
+        if (!this.session.renderState.baseLayer) return;
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.session.renderState.baseLayer.framebuffer);
+        const pose = frame.getViewerPose(this.space);
+        let i = 0;
+
+        for (const view of pose.views) {
+          this.views[i++] = {
+            port: this.session.renderState.baseLayer.getViewport(view),
+            pmat: view.projectionMatrix,
+            tmat: view.transform.inverse.matrix,
+            pos: view.transform.position
+          };
+        }
+
+        mainLoop();
+      };
+
+      rAF();
+
+      if (!this.activated) {
+        this.activated = true;
+        this.leave();
+      }
+    }
+
+    async leave() {
+      if (!this.activated) return;
+      this.activated = false;
+      if (!this.session) return;
+      await this.session.end();
+      this.session = null;
+
+      if (this.activated) {
+        this.activated = false;
+        this.enter(this.mainLoop);
+      }
+    }
+
+    display2d() {
+      if (!this.views[0]) return;
+      this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      this.gl.clearDepth(1.0);
+      this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+      this.gl.disable(this.gl.DEPTH_TEST);
+      this.gl.useProgram(this.program);
+      this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.ibuffer);
+      this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, this.indices, this.gl.STATIC_DRAW);
+      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vbuffer);
+      this.gl.bufferData(this.gl.ARRAY_BUFFER, this.coords, this.gl.STATIC_DRAW);
+      const vindex = this.gl.getAttribLocation(this.program, 'aCoord');
+      this.gl.vertexAttribPointer(vindex, 3, this.gl.FLOAT, false, 0, 0);
+      this.gl.enableVertexAttribArray(vindex);
+      this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.cbuffer);
+      this.gl.bufferData(this.gl.ARRAY_BUFFER, this.colors, this.gl.STATIC_DRAW);
+      const cindex = this.gl.getAttribLocation(this.program, 'aColor');
+      this.gl.vertexAttribPointer(cindex, 3, this.gl.FLOAT, false, 0, 0);
+      this.gl.enableVertexAttribArray(cindex);
+
+      for (const view of this.views) {
+        this.gl.viewport(view.port.x, view.port.y, view.port.width, view.port.height);
+        const pmat = this.gl.getUniformLocation(this.program, 'uPMat');
+        this.gl.uniformMatrix4fv(pmat, false, view.pmat);
+        const tmat = this.gl.getUniformLocation(this.program, 'uTMat');
+        this.gl.uniformMatrix4fv(tmat, false, view.tmat);
+        const camera = this.gl.getUniformLocation(this.program, 'uCamera');
+        this.gl.uniform3fv(camera, [view.pos.x, view.pos.y, view.pos.z]);
+        this.gl.drawElements(this.gl.LINES, this.nIndices, this.gl.UNSIGNED_SHORT, 0);
+      }
+
+      this.nCoords = 0;
+      this.nIndices = 0;
+      this.gl.flush();
+    }
+
+    draw(data, parameters, depth, palette) {
+      const src = data.vertices;
+      const pctx3 = data.pct * 3;
+      translate.setup(parameters, 0, depth.minz);
+      const baseCoords = this.nCoords;
+      const r = palette[data.color].r / 255;
+      const g = palette[data.color].g / 255;
+      const b = palette[data.color].b / 255;
+
+      for (let i = 0; i < pctx3; i += 3) {
+        translate.convert(src[i + 0], src[i + 1], src[i + 2]); // Convert MAGIC world to GL world.
+
+        this.coords[this.nCoords * 3 + 0] = translate.x;
+        this.coords[this.nCoords * 3 + 1] = -translate.y;
+        this.coords[this.nCoords * 3 + 2] = -translate.z;
+        this.colors[this.nCoords * 3 + 0] = r;
+        this.colors[this.nCoords * 3 + 1] = g;
+        this.colors[this.nCoords * 3 + 2] = b;
+        this.nCoords++;
+      }
+
+      const indices = data.indices;
+      const lctx2 = data.lct * 2;
+      const maxz = this[_].depth.maxz + this[_].depth.minz;
+
+      for (let i = 0; i < lctx2; i += 2) {
+        const s = baseCoords + indices[i + 0];
+        const e = baseCoords + indices[i + 1]; // Simplified MAGIC world clipping.
+
+        const sz = -this.coords[s * 3 + 2];
+        const ez = -this.coords[e * 3 + 2];
+        if (sz < 0 || maxz < sz || ez < 0 || maxz < ez) continue;
+        this.indices[this.nIndices++] = s;
+        this.indices[this.nIndices++] = e;
+      }
+    }
+
+  }
 
   class Magic2 {
     // constructor
-    // @param {CanvasRenderingContext2D} context
+    // @param {Array<CanvasRenderingContext2D>} contexts
     constructor(contexts) {
       this[_] = {
         // private members
@@ -187,7 +394,7 @@
         },
         translate: {
           vertices: new Float32Array(8192 * 3),
-          indices: new Float32Array(8192 * 2)
+          indices: new Uint16Array(8192 * 2)
         },
         palette: [{
           r: 0,
@@ -292,6 +499,7 @@
         clients: [],
         apage: 0,
         vr: 0,
+        xr: new XR(),
         updatePalette: function (i) {
           const palette = this[_].palette[i];
           palette.c = 'rgba(' + palette.r + ',' + palette.g + ',' + palette.b + ',1.0)';
@@ -376,6 +584,7 @@
       bg.canvas.style.display = 'none';
 
       for (let context of this[_].contexts) {
+        if (!context) continue;
         context.clearRect(0, 0, fg.canvas.width, fg.canvas.height);
         context.globalCompositeOperation = 'lighter';
       }
@@ -393,11 +602,23 @@
       palette.b = b;
 
       this[_].updatePalette(index);
+    } // Should be called from an event handler for user interactions.
+
+
+    xr(enable, mainLoop) {
+      if (enable) {
+        this[_].contexts[this[_].fgcontext].canvas.style.display = 'none';
+        this[_].contexts[this[_].bgcontext].canvas.style.display = 'none';
+
+        this[_].xr.enter(mainLoop);
+      } else {
+        this[_].xr.leave();
+      }
     }
 
     vr(mode) {
-      if (mode === undefined) return this[_].vr;
       var result = this[_].vr;
+      if (mode === undefined) return result;
       this[_].vr = mode;
 
       for (let i = 0; i < 16; ++i) this[_].updatePalette(i);
@@ -447,7 +668,8 @@
       const c = this[_].contexts[this[_].apage];
       const n = x.length;
 
-      if (this[_].vr) {
+      if (this[_].xr.activated) {// TODO
+      } else if (this[_].vr) {
         const c1 = this.context(1);
         c.strokeStyle = this[_].palette[this[_].color][c1.color];
         c.beginPath();
@@ -493,7 +715,8 @@
       const height = Math.abs(y2 - y1);
       const c = this[_].contexts[this[_].apage];
 
-      if (this[_].vr) {
+      if (this[_].xr.activated) {// TODO
+      } else if (this[_].vr) {
         const c1 = this.context(1);
         c.fillStyle = this[_].palette[this[_].color][c1.color];
         c.fillRect(left * c1.scaleX + c1.offset, top * c1.scaleY, width * c1.scaleX, height * c1.scaleY);
@@ -607,7 +830,9 @@
 
 
     translate3dTo2d() {
-      if (this[_].vr) {
+      if (this[_].xr.activated) {
+        this[_].xr.draw(this[_].data, this[_].parameters, this[_].depth, this[_].palette);
+      } else if (this[_].vr) {
         this[_].draw(this.context(1));
 
         this[_].draw(this.context(2));
@@ -624,6 +849,13 @@
 
 
     display2d() {
+      if (this[_].xr.activated) {
+        this[_].xr.display2d(); // TODO: Call clients.
+
+
+        return;
+      }
+
       const previous = this[_].fgcontext;
       this[_].fgcontext = this[_].bgcontext;
       this[_].bgcontext = previous;
@@ -641,9 +873,10 @@
 
         bg.clearRect(0, 0, bg.canvas.width, bg.canvas.height);
         bg.fillStyle = this[_].palette[0][c1.color];
-        bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
+        bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height); // TODO: wrong
+
         bg.fillStyle = this[_].palette[0][c2.color];
-        bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
+        bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height); // TODO: wrong
       } else {
         var c = this.context(0);
 

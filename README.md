@@ -17,10 +17,13 @@ MAGIC2 compatible library in JavaScript
 # Extended stereo graphic features
 
 ## Split mode
-Split a screen into two screens for left and right eyes.
+Splits a screen into two screens for left and right eyes.
 
 ## Color mode
 Draws in red and blue into a overlayed screen for left and right eyes.
+
+## Web XR mode
+Uses Web XR API to render stereo graphics into HMD for VR.
 
 # How to build
 Following steps below starts gulp to monitor src/magic2.es6 to transpile and

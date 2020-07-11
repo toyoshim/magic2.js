@@ -1,6 +1,6 @@
 {
   "name": "magic2.js",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "MAGIC2: a wireframe graphics library",
   "main": "magic2.js",
   "scripts": {
