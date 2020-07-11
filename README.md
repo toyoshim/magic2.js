@@ -30,20 +30,20 @@ Following steps below starts gulp to monitor src/magic2.es6 to transpile and
 minify it.
 ```
 $ npm install
-$ nxp gulp
+$ npx gulp
 ```
 
 ## Transpile
 ```
-$ nxp gulp babel
+$ npx gulp babel
 ```
 
 ## Minify
 ```
-$ nxp gulp uglify
+$ npx gulp uglify
 ```
 
 ## Watch
 ```
-$ nxp gulp watch  # or default
+$ npx gulp watch  # or default
 ```
