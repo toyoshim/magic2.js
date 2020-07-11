@@ -344,7 +344,7 @@ void main() {
 
       const indices = data.indices;
       const lctx2 = data.lct * 2;
-      const maxz = this[_].depth.maxz + this[_].depth.minz;
+      const maxz = depth.maxz + depth.minz;
 
       for (let i = 0; i < lctx2; i += 2) {
         const s = baseCoords + indices[i + 0];
