@@ -1,61 +1,49 @@
 "use strict";
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
 // Copyright 2016 Takashi Toyoshima <toyoshim@gmail.com>. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 (function (global) {
   'use strict'; // A special symbol to hide private members.
 
-  var _ = Symbol(); // MAGIC2 Commands.
+  const _ = Symbol(); // MAGIC2 Commands.
 
 
-  var C_LINE = 0x00;
-  var C_SPLINE = 0x01;
-  var C_BOX = 0x02;
-  var C_TRIANGLE = 0x03;
-  var C_BOX_FULL = 0x04;
-  var C_CIRCLE_FULL = 0x05;
-  var C_SET_WINDOW = 0x06;
-  var C_SET_MODE = 0x07;
-  var C_POINT = 0x08;
-  var C_CLS = 0x09;
-  var C_SET_3D_PARAMETER = 0x0b;
-  var C_SET_3D_DATA = 0x0c;
-  var C_TRANSLATE_3D_TO_2D = 0x0d;
-  var C_DISPLAY_2D = 0x0e;
-  var C_DONE = 0x0f;
-  var C_COLOR = 0x10;
-  var C_CRT = 0x11;
-  var C_INIT = 0x12;
-  var C_AUTO = 0x13;
-  var C_APAGE = 0x14;
-  var C_DEPTH = 0x15; // 3D Parameters.
+  const C_LINE = 0x00;
+  const C_SPLINE = 0x01;
+  const C_BOX = 0x02;
+  const C_TRIANGLE = 0x03;
+  const C_BOX_FULL = 0x04;
+  const C_CIRCLE_FULL = 0x05;
+  const C_SET_WINDOW = 0x06;
+  const C_SET_MODE = 0x07;
+  const C_POINT = 0x08;
+  const C_CLS = 0x09;
+  const C_SET_3D_PARAMETER = 0x0b;
+  const C_SET_3D_DATA = 0x0c;
+  const C_TRANSLATE_3D_TO_2D = 0x0d;
+  const C_DISPLAY_2D = 0x0e;
+  const C_DONE = 0x0f;
+  const C_COLOR = 0x10;
+  const C_CRT = 0x11;
+  const C_INIT = 0x12;
+  const C_AUTO = 0x13;
+  const C_APAGE = 0x14;
+  const C_DEPTH = 0x15; // 3D Parameters.
 
-  var P_CX = 0;
-  var P_CY = 1;
-  var P_CZ = 2;
-  var P_DX = 3;
-  var P_DY = 4;
-  var P_DZ = 5;
-  var P_HEAD = 6;
-  var P_PITCH = 7;
-  var P_BANK = 8; // VR mode.
+  const P_CX = 0;
+  const P_CY = 1;
+  const P_CZ = 2;
+  const P_DX = 3;
+  const P_DY = 4;
+  const P_DZ = 5;
+  const P_HEAD = 6;
+  const P_PITCH = 7;
+  const P_BANK = 8; // VR mode.
 
-  var V_NORMAL = 0;
-  var V_SPLIT = 1;
-  var V_COLOR = 2;
+  const V_NORMAL = 0;
+  const V_SPLIT = 1;
+  const V_COLOR = 2;
   /**
    * Decodes an unsigned 16-bit number in big endian.
    * @param {Uint8Array} memory memory image
@@ -63,7 +51,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
    * @param {Number} read value
    */
 
-  var mem_read_u16be = function mem_read_u16be(memory, addr) {
+  const mem_read_u16be = function (memory, addr) {
     return memory[addr] << 8 | memory[addr + 1];
   };
   /**
@@ -74,13 +62,13 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
    */
 
 
-  var mem_read_s16be = function mem_read_s16be(memory, addr) {
-    var u16be = mem_read_u16be(memory, addr);
+  const mem_read_s16be = function (memory, addr) {
+    const u16be = mem_read_u16be(memory, addr);
     if (u16be < 0x8000) return u16be;
     return u16be - 0x10000;
   };
 
-  var translate = {
+  const translate = {
     x: 0.0,
     y: 0.0,
     z: 0.0,
@@ -88,24 +76,24 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
     dy: 0.0,
     dz: 0.0,
     m: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]],
-    setup: function setup(parameters, position, minz) {
+    setup: function (parameters, position, minz) {
       this.dx = parameters[P_DX];
       this.dy = parameters[P_DY];
       this.dz = parameters[P_DZ];
-      var math = Math;
-      var cx = parameters[P_CX] - position;
-      var cy = parameters[P_CY];
-      var cz = parameters[P_CZ];
-      var rh = parameters[P_HEAD] / 180 * math.PI;
-      var rp = parameters[P_PITCH] / 180 * math.PI;
-      var rb = parameters[P_BANK] / 180 * math.PI;
-      var ch = math.cos(rh);
-      var cp = math.cos(rp);
-      var cb = math.cos(rb);
-      var sh = math.sin(rh);
-      var sp = math.sin(rp);
-      var sb = math.sin(rb);
-      var m = this.m;
+      const math = Math;
+      const cx = parameters[P_CX] - position;
+      const cy = parameters[P_CY];
+      const cz = parameters[P_CZ];
+      const rh = parameters[P_HEAD] / 180 * math.PI;
+      const rp = parameters[P_PITCH] / 180 * math.PI;
+      const rb = parameters[P_BANK] / 180 * math.PI;
+      const ch = math.cos(rh);
+      const cp = math.cos(rp);
+      const cb = math.cos(rb);
+      const sh = math.sin(rh);
+      const sp = math.sin(rp);
+      const sb = math.sin(rb);
+      const m = this.m;
       m[0][0] = sh * sp * sb + ch * cb;
       m[0][1] = sb * cp;
       m[0][2] = ch * sp * sb - sh * cb;
@@ -119,7 +107,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
       m[2][2] = ch * cp;
       m[2][3] = this.dz + cz + minz;
     },
-    convert: function convert(sx, sy, sz) {
+    convert: function (sx, sy, sz) {
       var x = sx - this.dx;
       var y = sy - this.dy;
       var z = sz - this.dz;
@@ -130,23 +118,23 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
     }
   }; // TODO: Composite ctranslation and camera matrix.
 
-  var camera = {
+  const camera = {
     x: 0.0,
     y: 0.0,
     z: 0.0,
     m: [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
-    setup: function setup(alpha, beta, gamma) {
-      var math = Math;
-      var a = beta / 180 * math.PI * (gamma < 0 ? -1 : 1);
-      var b = (gamma + 90) / 180 * math.PI * (gamma < 0 ? 1 : -1);
-      var c = alpha / 180 * math.PI;
-      var ca = math.cos(a);
-      var cb = math.cos(b);
-      var cc = math.cos(c);
-      var sa = math.sin(a);
-      var sb = math.sin(b);
-      var sc = math.sin(c);
-      var m = this.m;
+    setup: function (alpha, beta, gamma) {
+      const math = Math;
+      const a = beta / 180 * math.PI * (gamma < 0 ? -1 : 1);
+      const b = (gamma + 90) / 180 * math.PI * (gamma < 0 ? 1 : -1);
+      const c = alpha / 180 * math.PI;
+      const ca = math.cos(a);
+      const cb = math.cos(b);
+      const cc = math.cos(c);
+      const sa = math.sin(a);
+      const sb = math.sin(b);
+      const sc = math.sin(c);
+      const m = this.m;
       m[0][0] = -sa * sb * sc + ca * cc;
       m[0][1] = -sa * cb;
       m[0][2] = sa * sb * cc + ca * sc;
@@ -157,7 +145,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
       m[2][1] = sb;
       m[2][2] = cb * cc;
     },
-    convert: function convert(x, y, z) {
+    convert: function (x, y, z) {
       var m = this.m;
       this.x = m[0][0] * x + m[0][1] * y + m[0][2] * z;
       this.y = m[1][0] * x + m[1][1] * y + m[1][2] * z;
@@ -165,12 +153,10 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
     }
   };
 
-  var Magic2 = /*#__PURE__*/function () {
+  class Magic2 {
     // constructor
     // @param {CanvasRenderingContext2D} context
-    function Magic2(contexts) {
-      _classCallCheck(this, Magic2);
-
+    constructor(contexts) {
       this[_] = {
         // private members
         window: {
@@ -307,7 +293,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
         apage: 0,
         vr: 0,
         updatePalette: function (i) {
-          var palette = this[_].palette[i];
+          const palette = this[_].palette[i];
           palette.c = 'rgba(' + palette.r + ',' + palette.g + ',' + palette.b + ',1.0)';
           palette.l = 0.299 * palette.r + 0.587 * palette.g + 0.114 * palette.b | 0;
           palette.cl = 'rgba(' + palette.l + ',0,0,1.0)';
@@ -384,552 +370,488 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
           c.restore();
         }.bind(this)
       };
-      var fg = this[_].contexts[this[_].fgcontext];
+      const fg = this[_].contexts[this[_].fgcontext];
       fg.canvas.style.display = 'block';
-      var bg = this[_].contexts[this[_].bgcontext];
+      const bg = this[_].contexts[this[_].bgcontext];
       bg.canvas.style.display = 'none';
 
-      var _iterator = _createForOfIteratorHelper(this[_].contexts),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var context = _step.value;
-          context.clearRect(0, 0, fg.canvas.width, fg.canvas.height);
-          context.globalCompositeOperation = 'lighter';
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
+      for (let context of this[_].contexts) {
+        context.clearRect(0, 0, fg.canvas.width, fg.canvas.height);
+        context.globalCompositeOperation = 'lighter';
       }
     }
 
-    _createClass(Magic2, [{
-      key: "palette",
-      value: function palette(index, color) {
-        if (color == undefined) return this[_].palette[index];
-        var i = (color & 1) == 0 ? 0 : 4;
-        var r = ((color >> 6 & 0x1f) << 3) + i;
-        var g = ((color >> 11 & 0x1f) << 3) + i;
-        var b = ((color >> 1 & 0x1f) << 3) + i;
-        var palette = this[_].palette[index];
-        palette.r = r;
-        palette.g = g;
-        palette.b = b;
+    palette(index, color) {
+      if (color == undefined) return this[_].palette[index];
+      var i = (color & 1) == 0 ? 0 : 4;
+      var r = ((color >> 6 & 0x1f) << 3) + i;
+      var g = ((color >> 11 & 0x1f) << 3) + i;
+      var b = ((color >> 1 & 0x1f) << 3) + i;
+      var palette = this[_].palette[index];
+      palette.r = r;
+      palette.g = g;
+      palette.b = b;
 
-        this[_].updatePalette(index);
-      }
-    }, {
-      key: "vr",
-      value: function vr(mode) {
-        if (mode === undefined) return this[_].vr;
-        var result = this[_].vr;
-        this[_].vr = mode;
+      this[_].updatePalette(index);
+    }
 
-        for (var i = 0; i < 16; ++i) {
-          this[_].updatePalette(i);
+    vr(mode) {
+      if (mode === undefined) return this[_].vr;
+      var result = this[_].vr;
+      this[_].vr = mode;
+
+      for (let i = 0; i < 16; ++i) this[_].updatePalette(i);
+
+      return result;
+    }
+
+    orientation(alpha, beta, gamma) {
+      const orientation = this[_].orientation;
+      if (orientation.baseAlpha === undefined) orientation.baseAlpha = alpha;
+      orientation.alpha = alpha - orientation.baseAlpha;
+      orientation.beta = beta;
+      orientation.gamma = gamma;
+    }
+
+    context(mode) {
+      const split = this[_].vr == V_SPLIT;
+      const c = this[_].contexts[0].canvas;
+      const base = !split || mode != 2 ? 0 : c.width / 2;
+      const width = !split || mode == 0 ? c.width : c.width / 2;
+      const aspect = !split || mode == 0 ? 4 / 3 : 1;
+      const color = this[_].vr != V_COLOR ? 'c' : mode == 1 ? 'cl' : 'cr';
+      return {
+        color: color,
+        base: base,
+        width: width,
+        offset: base + (width - c.height * aspect) / 2,
+        position: mode == 0 ? 0 : mode == 1 ? -10 : 10,
+        alpha: mode == 0 ? 0 : mode == 1 ? -2 : 2,
+        aspect: aspect,
+        scaleX: c.height / 256 * aspect,
+        scaleY: c.height / 256
+      };
+    }
+
+    vsync(client) {
+      this[_].clients.push(client);
+    }
+    /**
+     * Magic2 API: Strokes lines.
+     * @param {Array<number>} x points, [x1, x2, ..., xN]
+     * @param {Array<number>} y points, [y1, y2, ..., yN]
+     */
+
+
+    line(x, y) {
+      const c = this[_].contexts[this[_].apage];
+      const n = x.length;
+
+      if (this[_].vr) {
+        const c1 = this.context(1);
+        c.strokeStyle = this[_].palette[this[_].color][c1.color];
+        c.beginPath();
+        c.moveTo(x[0] * c1.scaleX + c1.offset, y[0] * c1.scaleY);
+
+        for (let i = 1; i < n; ++i) c.lineTo(x[i] * c1.scaleX + c1.offset, y[i] * c1.scaleY);
+
+        c.stroke();
+        const c2 = this.context(2);
+        c.strokeStyle = this[_].palette[this[_].color][c2.color];
+        c.beginPath();
+        c.moveTo(x[0] * c2.scaleX + c2.offset, y[0] * c2.scaleY);
+
+        for (let i = 1; i < n; ++i) c.lineTo(x[i] * c2.scaleX + c2.offset, y[i] * c2.scaleY);
+
+        c.stroke();
+      } else {
+        const context = this.context(0);
+        c.strokeStyle = this[_].palette[this[_].color][context.color];
+        c.beginPath();
+        c.moveTo(x[0] * context.scaleX + context.offset, y[0] * context.scaleY);
+
+        for (let i = 1; i < n; ++i) {
+          c.lineTo(x[i] * context.scaleX + context.offset, y[i] * context.scaleY);
         }
 
-        return result;
+        c.stroke();
       }
-    }, {
-      key: "orientation",
-      value: function orientation(alpha, beta, gamma) {
-        var orientation = this[_].orientation;
-        if (orientation.baseAlpha === undefined) orientation.baseAlpha = alpha;
-        orientation.alpha = alpha - orientation.baseAlpha;
-        orientation.beta = beta;
-        orientation.gamma = gamma;
+    }
+    /**
+     * Magic2 API: Fill a box.
+     * @param {number} x1 x1
+     * @param {number} y1 y1
+     * @param {number} x2 x2
+     * @param {number} y2 y2
+     */
+
+
+    boxFull(x1, y1, x2, y2) {
+      const left = Math.min(x1, x2);
+      const top = Math.min(y1, y2);
+      const width = Math.abs(x2 - x1);
+      const height = Math.abs(y2 - y1);
+      const c = this[_].contexts[this[_].apage];
+
+      if (this[_].vr) {
+        const c1 = this.context(1);
+        c.fillStyle = this[_].palette[this[_].color][c1.color];
+        c.fillRect(left * c1.scaleX + c1.offset, top * c1.scaleY, width * c1.scaleX, height * c1.scaleY);
+        const c2 = this.context(2);
+        c.fillStyle = this[_].palette[this[_].color][c2.color];
+        c.fillRect(left * c2.scaleX + c2.offset, top * c2.scaleY, width * c2.scaleX, height * c2.scaleY);
+      } else {
+        const context = this.context(0);
+        c.fillStyle = this[_].palette[this[_].color][context.color];
+        c.fillRect(left * context.scaleX + context.offset, top * context.scaleY, width * context.scaleX, height * context.scaleY);
       }
-    }, {
-      key: "context",
-      value: function context(mode) {
-        var split = this[_].vr == V_SPLIT;
-        var c = this[_].contexts[0].canvas;
-        var base = !split || mode != 2 ? 0 : c.width / 2;
-        var width = !split || mode == 0 ? c.width : c.width / 2;
-        var aspect = !split || mode == 0 ? 4 / 3 : 1;
-        var color = this[_].vr != V_COLOR ? 'c' : mode == 1 ? 'cl' : 'cr';
-        return {
-          color: color,
-          base: base,
-          width: width,
-          offset: base + (width - c.height * aspect) / 2,
-          position: mode == 0 ? 0 : mode == 1 ? -10 : 10,
-          alpha: mode == 0 ? 0 : mode == 1 ? -2 : 2,
-          aspect: aspect,
-          scaleX: c.height / 256 * aspect,
-          scaleY: c.height / 256
-        };
+    }
+    /**
+     * Magic2 API: Sets window rectangle.
+     * @param {number} x1 x1
+     * @param {number} y1 y1
+     * @param {number} x2 x2
+     * @param {number} y2 y2
+     */
+
+
+    setWindow(x1, y1, x2, y2) {
+      this[_].window.x = x1;
+      this[_].window.y = y1;
+      this[_].window.w = x2 - x1;
+      this[_].window.h = y2 - y1;
+    }
+    /**
+     * Magic2 API: Clears screen.
+     */
+
+
+    cls() {
+      const c = this[_].contexts[this[_].apage];
+      c.clearRect(0, 0, c.canvas.width, c.canvas.height);
+    }
+    /**
+     * Magic2 API: Sets translate parameters.
+     * @param {number} num parameter ID
+     *     0: CX, 1: CY, 2: CZ, 3: DX, 4: DY, 5: DZ, 6: HEAD, 7: PITCH, 8: BANK
+     *       CX/   CY/  CZ: move
+     *       DX/   DY/  DZ: center address of rotation
+     *     HEAD/PITCH/BANK: rotation
+     * @param {number} data parameter
+     */
+
+
+    set3dParameter(num, data) {
+      this[_].parameters[num] = data;
+    }
+    /**
+     * Magic2 API: Sets a 3D object data. The stored object will be translated
+     * with 3D parameters, and will be drawn by translate2dTo3d().
+     * @param {number} pct number of vertices
+     * @param {Int16Array} vertices in [x1, y1, z1, x2, ..., zN]
+     * @param {number} lct number of lines
+     * @param {Uint16Array} indices of start and end point vertices in
+     *     [s1, e1, s2, ..., eN]
+     * @param {number} color palette code (optional)
+     */
+
+
+    set3dData(pct, vertices, lct, indices, color) {
+      this[_].data.pct = pct;
+      this[_].data.vertices = vertices;
+      this[_].data.lct = lct;
+      this[_].data.indices = indices;
+      this[_].data.color = color !== undefined ? color : this[_].color;
+    }
+    /**
+     * Magic2 API: Parses a 3D object data and sets it.
+     * @param {Uint8Array} memory image
+     * @param {number} addr address of the 3D object in |memory|
+     */
+
+
+    set3dRawData(memory, addr) {
+      const base = addr;
+      this[_].data.pct = mem_read_u16be(memory, addr);
+      addr += 2;
+
+      for (let i = 0; i < this[_].data.pct; ++i) {
+        this[_].data.vertices[i * 3 + 0] = mem_read_s16be(memory, addr + 0);
+        this[_].data.vertices[i * 3 + 1] = mem_read_s16be(memory, addr + 2);
+        this[_].data.vertices[i * 3 + 2] = mem_read_s16be(memory, addr + 4);
+        addr += 6;
       }
-    }, {
-      key: "vsync",
-      value: function vsync(client) {
-        this[_].clients.push(client);
+
+      this[_].data.lct = mem_read_u16be(memory, addr);
+      addr += 2;
+
+      if (this[_].cext) {
+        this[_].data.color = mem_read_u16be(memory, addr) & 0x0f;
+        addr += 2;
+      } else {
+        this[_].data.color = this[_].color;
       }
-      /**
-       * Magic2 API: Strokes lines.
-       * @param {Array<number>} x points, [x1, x2, ..., xN]
-       * @param {Array<number>} y points, [y1, y2, ..., yN]
-       */
 
-    }, {
-      key: "line",
-      value: function line(x, y) {
-        var c = this[_].contexts[this[_].apage];
-        var n = x.length;
+      for (let i = 0; i < this[_].data.lct; ++i) {
+        this[_].data.indices[i * 2 + 0] = mem_read_u16be(memory, addr + 0);
+        this[_].data.indices[i * 2 + 1] = mem_read_u16be(memory, addr + 2);
+        addr += 4;
+      }
 
-        if (this[_].vr) {
-          var c1 = this.context(1);
-          c.strokeStyle = this[_].palette[this[_].color][c1.color];
-          c.beginPath();
-          c.moveTo(x[0] * c1.scaleX + c1.offset, y[0] * c1.scaleY);
+      return addr - base;
+    }
+    /**
+     * Magic2 API: Converts a prepared 3D object vertices and draws it onto the
+     * offscreen.
+     */
 
-          for (var i = 1; i < n; ++i) {
-            c.lineTo(x[i] * c1.scaleX + c1.offset, y[i] * c1.scaleY);
-          }
 
-          c.stroke();
-          var c2 = this.context(2);
-          c.strokeStyle = this[_].palette[this[_].color][c2.color];
-          c.beginPath();
-          c.moveTo(x[0] * c2.scaleX + c2.offset, y[0] * c2.scaleY);
+    translate3dTo2d() {
+      if (this[_].vr) {
+        this[_].draw(this.context(1));
 
-          for (var _i = 1; _i < n; ++_i) {
-            c.lineTo(x[_i] * c2.scaleX + c2.offset, y[_i] * c2.scaleY);
-          }
+        this[_].draw(this.context(2));
+      } else {
+        this[_].draw(this.context(0));
+      }
+    }
+    /**
+     * Magic2 API: Swaps offscreen and show rendered 3D data. Internnaly page 0
+     * and 1 are used for rendering 3D objects in offscreen. translate3dTo2d()
+     * actually renders a 3D object into the offscreen, and display2d() swap
+     * the active page and offscreen page each other.
+     */
 
-          c.stroke();
-        } else {
-          var context = this.context(0);
-          c.strokeStyle = this[_].palette[this[_].color][context.color];
-          c.beginPath();
-          c.moveTo(x[0] * context.scaleX + context.offset, y[0] * context.scaleY);
 
-          for (var _i2 = 1; _i2 < n; ++_i2) {
-            c.lineTo(x[_i2] * context.scaleX + context.offset, y[_i2] * context.scaleY);
-          }
+    display2d() {
+      const previous = this[_].fgcontext;
+      this[_].fgcontext = this[_].bgcontext;
+      this[_].bgcontext = previous;
+      const fg = this[_].contexts[this[_].fgcontext];
+      const bg = this[_].contexts[this[_].bgcontext];
 
-          c.stroke();
+      if (this[_].vr) {
+        var c1 = this.context(1);
+        var c2 = this.context(2);
+
+        for (var client of this[_].clients) {
+          client(fg, c1);
+          client(fg, c2);
         }
+
+        bg.clearRect(0, 0, bg.canvas.width, bg.canvas.height);
+        bg.fillStyle = this[_].palette[0][c1.color];
+        bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
+        bg.fillStyle = this[_].palette[0][c2.color];
+        bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
+      } else {
+        var c = this.context(0);
+
+        for (var client of this[_].clients) client(fg, c);
+
+        bg.clearRect(0, 0, bg.canvas.width, bg.canvas.height);
+        bg.fillStyle = this[_].palette[0][c.color];
+        bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
       }
-      /**
-       * Magic2 API: Fill a box.
-       * @param {number} x1 x1
-       * @param {number} y1 y1
-       * @param {number} x2 x2
-       * @param {number} y2 y2
-       */
 
-    }, {
-      key: "boxFull",
-      value: function boxFull(x1, y1, x2, y2) {
-        var left = Math.min(x1, x2);
-        var top = Math.min(y1, y2);
-        var width = Math.abs(x2 - x1);
-        var height = Math.abs(y2 - y1);
-        var c = this[_].contexts[this[_].apage];
+      fg.canvas.style.display = 'block';
+      bg.canvas.style.display = 'none';
+    }
+    /**
+     * Magic2 API: Sets color for 2D drawing.
+     * @param {number} color color palette code
+     */
 
-        if (this[_].vr) {
-          var c1 = this.context(1);
-          c.fillStyle = this[_].palette[this[_].color][c1.color];
-          c.fillRect(left * c1.scaleX + c1.offset, top * c1.scaleY, width * c1.scaleX, height * c1.scaleY);
-          var c2 = this.context(2);
-          c.fillStyle = this[_].palette[this[_].color][c2.color];
-          c.fillRect(left * c2.scaleX + c2.offset, top * c2.scaleY, width * c2.scaleX, height * c2.scaleY);
-        } else {
-          var context = this.context(0);
-          c.fillStyle = this[_].palette[this[_].color][context.color];
-          c.fillRect(left * context.scaleX + context.offset, top * context.scaleY, width * context.scaleX, height * context.scaleY);
-        }
-      }
-      /**
-       * Magic2 API: Sets window rectangle.
-       * @param {number} x1 x1
-       * @param {number} y1 y1
-       * @param {number} x2 x2
-       * @param {number} y2 y2
-       */
 
-    }, {
-      key: "setWindow",
-      value: function setWindow(x1, y1, x2, y2) {
-        this[_].window.x = x1;
-        this[_].window.y = y1;
-        this[_].window.w = x2 - x1;
-        this[_].window.h = y2 - y1;
-      }
-      /**
-       * Magic2 API: Clears screen.
-       */
+    color(color) {
+      this[_].color = color;
+    }
+    /**
+     * Magic2 API: Sets CRT mode.
+     * @param {number} crt CRT mode
+     *   crt >= 0x100: extended mode (to make set3dData accept color data)
+     */
 
-    }, {
-      key: "cls",
-      value: function cls() {
-        var c = this[_].contexts[this[_].apage];
-        c.clearRect(0, 0, c.canvas.width, c.canvas.height);
-      }
-      /**
-       * Magic2 API: Sets translate parameters.
-       * @param {number} num parameter ID
-       *     0: CX, 1: CY, 2: CZ, 3: DX, 4: DY, 5: DZ, 6: HEAD, 7: PITCH, 8: BANK
-       *       CX/   CY/  CZ: move
-       *       DX/   DY/  DZ: center address of rotation
-       *     HEAD/PITCH/BANK: rotation
-       * @param {number} data parameter
-       */
 
-    }, {
-      key: "set3dParameter",
-      value: function set3dParameter(num, data) {
-        this[_].parameters[num] = data;
-      }
-      /**
-       * Magic2 API: Sets a 3D object data. The stored object will be translated
-       * with 3D parameters, and will be drawn by translate2dTo3d().
-       * @param {number} pct number of vertices
-       * @param {Int16Array} vertices in [x1, y1, z1, x2, ..., zN]
-       * @param {number} lct number of lines
-       * @param {Uint16Array} indices of start and end point vertices in
-       *     [s1, e1, s2, ..., eN]
-       * @param {number} color palette code (optional)
-       */
+    crt(crt) {
+      console.warn('magic2: partially ignoring command CRT, ' + crt);
+      this[_].cext = (crt & 0x100) != 0;
+    }
+    /**
+     * Magic2 API: Executes magic commands stored in the specified memory.
+     * @param {Uint8Array} memory image
+     * @param {Number} addr memory address
+     * @return {Boolean} true if canvas is updated and it requires waiting vsync
+     */
 
-    }, {
-      key: "set3dData",
-      value: function set3dData(pct, vertices, lct, indices, color) {
-        this[_].data.pct = pct;
-        this[_].data.vertices = vertices;
-        this[_].data.lct = lct;
-        this[_].data.indices = indices;
-        this[_].data.color = color !== undefined ? color : this[_].color;
-      }
-      /**
-       * Magic2 API: Parses a 3D object data and sets it.
-       * @param {Uint8Array} memory image
-       * @param {number} addr address of the 3D object in |memory|
-       */
 
-    }, {
-      key: "set3dRawData",
-      value: function set3dRawData(memory, addr) {
-        var base = addr;
-        this[_].data.pct = mem_read_u16be(memory, addr);
+    auto(memory, addr) {
+      let shown = false;
+
+      for (;;) {
+        var cmd = mem_read_u16be(memory, addr);
         addr += 2;
 
-        for (var i = 0; i < this[_].data.pct; ++i) {
-          this[_].data.vertices[i * 3 + 0] = mem_read_s16be(memory, addr + 0);
-          this[_].data.vertices[i * 3 + 1] = mem_read_s16be(memory, addr + 2);
-          this[_].data.vertices[i * 3 + 2] = mem_read_s16be(memory, addr + 4);
-          addr += 6;
-        }
+        switch (cmd) {
+          case C_LINE:
+            {
+              const n = mem_read_u16be(memory, addr + 0);
+              const x = [];
+              const y = [];
 
-        this[_].data.lct = mem_read_u16be(memory, addr);
-        addr += 2;
-
-        if (this[_].cext) {
-          this[_].data.color = mem_read_u16be(memory, addr) & 0x0f;
-          addr += 2;
-        } else {
-          this[_].data.color = this[_].color;
-        }
-
-        for (var _i3 = 0; _i3 < this[_].data.lct; ++_i3) {
-          this[_].data.indices[_i3 * 2 + 0] = mem_read_u16be(memory, addr + 0);
-          this[_].data.indices[_i3 * 2 + 1] = mem_read_u16be(memory, addr + 2);
-          addr += 4;
-        }
-
-        return addr - base;
-      }
-      /**
-       * Magic2 API: Converts a prepared 3D object vertices and draws it onto the
-       * offscreen.
-       */
-
-    }, {
-      key: "translate3dTo2d",
-      value: function translate3dTo2d() {
-        if (this[_].vr) {
-          this[_].draw(this.context(1));
-
-          this[_].draw(this.context(2));
-        } else {
-          this[_].draw(this.context(0));
-        }
-      }
-      /**
-       * Magic2 API: Swaps offscreen and show rendered 3D data. Internnaly page 0
-       * and 1 are used for rendering 3D objects in offscreen. translate3dTo2d()
-       * actually renders a 3D object into the offscreen, and display2d() swap
-       * the active page and offscreen page each other.
-       */
-
-    }, {
-      key: "display2d",
-      value: function display2d() {
-        var previous = this[_].fgcontext;
-        this[_].fgcontext = this[_].bgcontext;
-        this[_].bgcontext = previous;
-        var fg = this[_].contexts[this[_].fgcontext];
-        var bg = this[_].contexts[this[_].bgcontext];
-
-        if (this[_].vr) {
-          var c1 = this.context(1);
-          var c2 = this.context(2);
-
-          var _iterator2 = _createForOfIteratorHelper(this[_].clients),
-              _step2;
-
-          try {
-            for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-              var client = _step2.value;
-              client(fg, c1);
-              client(fg, c2);
-            }
-          } catch (err) {
-            _iterator2.e(err);
-          } finally {
-            _iterator2.f();
-          }
-
-          bg.clearRect(0, 0, bg.canvas.width, bg.canvas.height);
-          bg.fillStyle = this[_].palette[0][c1.color];
-          bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
-          bg.fillStyle = this[_].palette[0][c2.color];
-          bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
-        } else {
-          var c = this.context(0);
-
-          var _iterator3 = _createForOfIteratorHelper(this[_].clients),
-              _step3;
-
-          try {
-            for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-              var client = _step3.value;
-              client(fg, c);
-            }
-          } catch (err) {
-            _iterator3.e(err);
-          } finally {
-            _iterator3.f();
-          }
-
-          bg.clearRect(0, 0, bg.canvas.width, bg.canvas.height);
-          bg.fillStyle = this[_].palette[0][c.color];
-          bg.fillRect(0, 0, bg.canvas.width, bg.canvas.height);
-        }
-
-        fg.canvas.style.display = 'block';
-        bg.canvas.style.display = 'none';
-      }
-      /**
-       * Magic2 API: Sets color for 2D drawing.
-       * @param {number} color color palette code
-       */
-
-    }, {
-      key: "color",
-      value: function color(_color) {
-        this[_].color = _color;
-      }
-      /**
-       * Magic2 API: Sets CRT mode.
-       * @param {number} crt CRT mode
-       *   crt >= 0x100: extended mode (to make set3dData accept color data)
-       */
-
-    }, {
-      key: "crt",
-      value: function crt(_crt) {
-        console.warn('magic2: partially ignoring command CRT, ' + _crt);
-        this[_].cext = (_crt & 0x100) != 0;
-      }
-      /**
-       * Magic2 API: Executes magic commands stored in the specified memory.
-       * @param {Uint8Array} memory image
-       * @param {Number} addr memory address
-       * @return {Boolean} true if canvas is updated and it requires waiting vsync
-       */
-
-    }, {
-      key: "auto",
-      value: function auto(memory, addr) {
-        var shown = false;
-
-        for (;;) {
-          var cmd = mem_read_u16be(memory, addr);
-          addr += 2;
-
-          switch (cmd) {
-            case C_LINE:
-              {
-                var n = mem_read_u16be(memory, addr + 0);
-                var x = [];
-                var y = [];
-
-                for (var i = 0; i < n; ++i) {
-                  x.push(mem_read_u16be(memory, addr + 2 + i * 4));
-                  y.push(mem_read_u16be(memory, addr + 4 + i * 4));
-                }
-
-                addr += 2 + 4 * n;
-                this.line(x, y);
-                break;
+              for (let i = 0; i < n; ++i) {
+                x.push(mem_read_u16be(memory, addr + 2 + i * 4));
+                y.push(mem_read_u16be(memory, addr + 4 + i * 4));
               }
 
-            case C_SPLINE:
-              throw new Error('magic2: unsupported command SPLINE');
+              addr += 2 + 4 * n;
+              this.line(x, y);
+              break;
+            }
 
-            case C_BOX:
+          case C_SPLINE:
+            throw new Error('magic2: unsupported command SPLINE');
+
+          case C_BOX:
+            addr += 8;
+            throw new Error('magic2: unsupported command BOX');
+
+          case C_TRIANGLE:
+            throw new Error('magic2: unsupported command TRIANGLE');
+
+          case C_BOX_FULL:
+            {
+              const x1 = mem_read_u16be(memory, addr + 0);
+              const y1 = mem_read_u16be(memory, addr + 2);
+              const x2 = mem_read_u16be(memory, addr + 4);
+              const y2 = mem_read_u16be(memory, addr + 6);
               addr += 8;
-              throw new Error('magic2: unsupported command BOX');
-
-            case C_TRIANGLE:
-              throw new Error('magic2: unsupported command TRIANGLE');
-
-            case C_BOX_FULL:
-              {
-                var x1 = mem_read_u16be(memory, addr + 0);
-                var y1 = mem_read_u16be(memory, addr + 2);
-                var x2 = mem_read_u16be(memory, addr + 4);
-                var y2 = mem_read_u16be(memory, addr + 6);
-                addr += 8;
-                this.boxFull(x1, y1, x2, y2);
-                break;
-              }
-
-            case C_CIRCLE_FULL:
-              throw new Error('magic2: unsupported command CIRCLE_FULL');
-
-            case C_SET_WINDOW:
-              {
-                var _x = mem_read_u16be(memory, addr + 0);
-
-                var _y = mem_read_u16be(memory, addr + 2);
-
-                var _x2 = mem_read_u16be(memory, addr + 4);
-
-                var _y2 = mem_read_u16be(memory, addr + 6);
-
-                addr += 8;
-                this.setWindow(_x, _y, _x2, _y2);
-                break;
-              }
-
-            case C_SET_MODE:
-              {
-                var mode = mem_read_u16be(memory, addr);
-                addr += 2;
-                console.warn('magic2: ignoring command SET_MODE, ' + mode);
-                break;
-              }
-
-            case C_POINT:
-              throw new Error('magic2: unsupported command POINT');
-
-            case C_CLS:
-              this.cls();
+              this.boxFull(x1, y1, x2, y2);
               break;
+            }
 
-            case C_SET_3D_PARAMETER:
-              {
-                var param_num = mem_read_u16be(memory, addr + 0);
-                var param_val = mem_read_s16be(memory, addr + 2);
-                addr += 4;
-                this.set3dParameter(param_num, param_val);
-                break;
-              }
+          case C_CIRCLE_FULL:
+            throw new Error('magic2: unsupported command CIRCLE_FULL');
 
-            case C_SET_3D_DATA:
-              addr += this.set3dRawData(memory, addr);
+          case C_SET_WINDOW:
+            {
+              const x1 = mem_read_u16be(memory, addr + 0);
+              const y1 = mem_read_u16be(memory, addr + 2);
+              const x2 = mem_read_u16be(memory, addr + 4);
+              const y2 = mem_read_u16be(memory, addr + 6);
+              addr += 8;
+              this.setWindow(x1, y1, x2, y2);
               break;
+            }
 
-            case C_TRANSLATE_3D_TO_2D:
-              this.translate3dTo2d();
+          case C_SET_MODE:
+            {
+              const mode = mem_read_u16be(memory, addr);
+              addr += 2;
+              console.warn('magic2: ignoring command SET_MODE, ' + mode);
               break;
+            }
 
-            case C_DISPLAY_2D:
-              this.display2d();
-              shown = true;
+          case C_POINT:
+            throw new Error('magic2: unsupported command POINT');
+
+          case C_CLS:
+            this.cls();
+            break;
+
+          case C_SET_3D_PARAMETER:
+            {
+              const param_num = mem_read_u16be(memory, addr + 0);
+              const param_val = mem_read_s16be(memory, addr + 2);
+              addr += 4;
+              this.set3dParameter(param_num, param_val);
               break;
+            }
 
-            case C_DONE:
-              return shown;
+          case C_SET_3D_DATA:
+            addr += this.set3dRawData(memory, addr);
+            break;
 
-            case C_COLOR:
-              {
-                var color = mem_read_u16be(memory, addr);
-                addr += 2;
-                this.color(color);
-                break;
-              }
+          case C_TRANSLATE_3D_TO_2D:
+            this.translate3dTo2d();
+            break;
 
-            case C_CRT:
-              {
-                var crt = mem_read_u16be(memory, addr);
-                addr += 2;
-                this.crt(crt);
-                break;
-              }
+          case C_DISPLAY_2D:
+            this.display2d();
+            shown = true;
+            break;
 
-            case C_INIT:
-              // TODO: Initialize palette, etc.
+          case C_DONE:
+            return shown;
+
+          case C_COLOR:
+            {
+              const color = mem_read_u16be(memory, addr);
+              addr += 2;
+              this.color(color);
               break;
+            }
 
-            case C_AUTO:
-              throw new Error('magic2: AUTO should not be used inside AUTO');
+          case C_CRT:
+            {
+              const crt = mem_read_u16be(memory, addr);
+              addr += 2;
+              this.crt(crt);
+              break;
+            }
 
-            case C_APAGE:
-              {
-                var apage = mem_read_u16be(memory, addr);
-                addr += 2;
-                this.apage(apage);
-                break;
-              }
+          case C_INIT:
+            // TODO: Initialize palette, etc.
+            break;
 
-            case C_DEPTH:
-              {
-                var minz = mem_read_u16be(memory, addr + 0);
-                var maxz = mem_read_u16be(memory, addr + 2);
-                addr += 4;
-                this.depth(minz, maxz);
-                break;
-              }
+          case C_AUTO:
+            throw new Error('magic2: AUTO should not be used inside AUTO');
 
-            default:
-              throw new Error('magic2: unknown command ' + cmd);
-          }
-        } // not reached.
+          case C_APAGE:
+            {
+              const apage = mem_read_u16be(memory, addr);
+              addr += 2;
+              this.apage(apage);
+              break;
+            }
 
-      }
-      /**
-       * Magic2 API: Sets active page for 2D drawing commands.
-       * @param {number} apage active page
-       */
+          case C_DEPTH:
+            {
+              const minz = mem_read_u16be(memory, addr + 0);
+              const maxz = mem_read_u16be(memory, addr + 2);
+              addr += 4;
+              this.depth(minz, maxz);
+              break;
+            }
 
-    }, {
-      key: "apage",
-      value: function apage(_apage) {
-        this[_].apage = _apage;
-      }
-      /**
-       * Magic2 API: Sets Z address for the plane of projection, and clipping.
-       * @param {number} minz Z address for the plane of projection (initial: 50)
-       * @param {number} maxz Z address for clipping (initial: 2000)
-       */
+          default:
+            throw new Error('magic2: unknown command ' + cmd);
+        }
+      } // not reached.
 
-    }, {
-      key: "depth",
-      value: function depth(minz, maxz) {
-        this[_].depth.minz = minz;
-        this[_].depth.maxz = maxz;
-      }
-    }]);
+    }
+    /**
+     * Magic2 API: Sets active page for 2D drawing commands.
+     * @param {number} apage active page
+     */
 
-    return Magic2;
-  }();
+
+    apage(apage) {
+      this[_].apage = apage;
+    }
+    /**
+     * Magic2 API: Sets Z address for the plane of projection, and clipping.
+     * @param {number} minz Z address for the plane of projection (initial: 50)
+     * @param {number} maxz Z address for clipping (initial: 2000)
+     */
+
+
+    depth(minz, maxz) {
+      this[_].depth.minz = minz;
+      this[_].depth.maxz = maxz;
+    }
+
+  }
 
   global.Magic2 = Magic2;
 })(typeof global !== 'undefined' ? global : typeof module !== 'undefined' ? module.exports : window);

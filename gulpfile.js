@@ -1,13 +1,20 @@
 const { src, dest, watch } = require('gulp');
 const babel = require('gulp-babel');
-const uglify = require('gulp-uglify');
+const uglifyes = require('uglify-es');
+const composer = require('gulp-uglify/composer');
+const uglify = composer(uglifyes, console);
 const rename = require('gulp-rename');
 
 const taskBabel = done => {
   src('./src/magic2.es6')
     .pipe(babel({
-      presets: ['@babel/preset-env']
-    }))
+      presets: [['@babel/preset-env', {
+        targets: {
+          esmodules: false,
+          node: 'current',
+        }
+      }]],
+    }).on('error', e => console.log(e)))
     .pipe(dest('.'));
   done();
 };
