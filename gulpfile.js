@@ -1,24 +1,31 @@
-var gulp = require('gulp');
-var babel = require('gulp-babel');
-var uglify = require('gulp-uglify');
-var rename = require('gulp-rename');
+const { src, dest, watch } = require('gulp');
+const babel = require('gulp-babel');
+const uglify = require('gulp-uglify');
+const rename = require('gulp-rename');
 
-gulp.task('babel', function() {
-  return gulp.src('./src/magic2.es6')
-    .pipe(babel())
-    .pipe(gulp.dest('./'))
-});
+const taskBabel = done => {
+  src('./src/magic2.es6')
+    .pipe(babel({
+      presets: ['@babel/preset-env']
+    }))
+    .pipe(dest('.'));
+  done();
+};
 
-gulp.task('uglify', ['babel'], function() {
-  return gulp.src('./magic2.js')
+const taskUglify = done => {
+  src('./magic2.js')
     .pipe(uglify())
     .pipe(rename('./magic2-min.js'))
-    .pipe(gulp.dest('.'));
-});
+    .pipe(dest('.'));
+  done();
+};
 
-gulp.task('watch', function() {
-  gulp.watch('./src/magic2.es6', ['babel']);
-  gulp.watch('./magic2.js', ['uglify']);
-});
+const taskWatch = done => {
+  watch('./src/magic2.es6', taskBabel);
+  watch('./magic2.js', taskUglify);
+};
 
-gulp.task('default', ['babel', 'uglify', 'watch']);
+exports.babel = taskBabel;
+exports.uglify = taskUglify;
+exports.watch = taskWatch;
+exports.default = taskWatch;

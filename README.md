@@ -21,3 +21,26 @@ Split a screen into two screens for left and right eyes.
 
 ## Color mode
 Draws in red and blue into a overlayed screen for left and right eyes.
+
+# How to build
+Following steps below starts gulp to monitor src/magic2.es6 to transpile and
+minify it.
+```
+$ npm install
+$ nxp gulp
+```
+
+## Transpile
+```
+$ nxp gulp babel
+```
+
+## Minify
+```
+$ nxp gulp uglify
+```
+
+## Watch
+```
+$ nxp gulp watch  # or default
+```
