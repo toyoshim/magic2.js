@@ -858,12 +858,10 @@ void main() {
 
         const fg = this[_].contexts[2];
         const c1 = this.context(1);
-        const c2 = this.context(2); //fg.clearRect(0, 0, fg.canvas.width, fg.canvas.height);
+        const c2 = this.context(2);
+        fg.clearRect(0, 0, fg.canvas.width, fg.canvas.height);
 
-        for (let client of this[_].clients) {
-          client(fg, c1);
-          client(fg, c2);
-        }
+        for (let client of this[_].clients) client(fg, [c1, c2]);
 
         return;
       }
@@ -878,10 +876,7 @@ void main() {
         var c1 = this.context(1);
         var c2 = this.context(2);
 
-        for (var client of this[_].clients) {
-          client(fg, c1);
-          client(fg, c2);
-        }
+        for (var client of this[_].clients) client(fg, [c1, c2]);
 
         bg.clearRect(0, 0, bg.canvas.width, bg.canvas.height);
         bg.fillStyle = this[_].palette[0][c1.color];
@@ -892,7 +887,7 @@ void main() {
       } else {
         var c = this.context(0);
 
-        for (var client of this[_].clients) client(fg, c);
+        for (var client of this[_].clients) client(fg, [c]);
 
         bg.clearRect(0, 0, bg.canvas.width, bg.canvas.height);
         bg.fillStyle = this[_].palette[0][c.color];
