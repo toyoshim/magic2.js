@@ -1109,6 +1109,57 @@ void main() {
         context.canvas.style.opacity = this[_].contrast;
       }
     }
+    /**
+     * Extra API: Draws a point in color 15.
+     * @param {number} x address from 0 to 255
+     * @param {number} y address from 0 to 255
+     * @param {number} z address from 0 to 1000 (or maxz)
+     */
+
+
+    point3d(x, y, z, r) {
+      if (this[_].xr.activated) {// TODO
+      } else if (this[_].vr) {
+        const c = this[_].contexts[this[_].fgcontext];
+        const c1 = this.context(1);
+        const o = this[_].orientation;
+        camera.setup(o.alpha + c1.alpha, o.beta, o.gamma);
+        camera.convert(x, y, z);
+        const d1 = camera.z / 256;
+        const x1 = c1.offset + camera.x / d1 * c1.scaleX;
+
+        if (x1 < c1.width) {
+          c.beginPath();
+          c.arc(x1, camera.y / d1 * c1.scaleY, r * c1.scaleY, 0, 2 * Math.PI);
+          c.fillStyle = this[_].palette[15][c1.color];
+          c.fill();
+          c.closePath();
+        }
+
+        const c2 = this.context(2);
+        camera.setup(o.alpha + c2.alpha, o.beta, o.gamma);
+        camera.convert(x, y, z);
+        const d2 = camera.z / 256;
+        const x2 = c2.offset + camera.x / d2 * c2.scaleX;
+
+        if (c2.base < x2) {
+          c.beginPath();
+          c.arc(x2, camera.y / d2 * c2.scaleY, r * c2.scaleY, 0, 2 * Math.PI);
+          c.fillStyle = this[_].palette[15][c2.color];
+          c.fill();
+          c.closePath();
+        }
+      } else {
+        const c = this[_].contexts[this[_].fgcontext];
+        const context = this.context(0);
+        const d = z / 256;
+        c.beginPath();
+        c.arc(context.offset + x / d * context.scaleX, y / d * context.scaleY, r * context.scaleY, 0, 2 * Math.PI);
+        c.fillStyle = this[_].palette[15][context.color];
+        c.fill();
+        c.closePath();
+      }
+    }
 
   }
 
