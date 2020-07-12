@@ -607,8 +607,8 @@ void main() {
 
     xr(enable, mainLoop) {
       if (enable) {
-        this[_].contexts[this[_].fgcontext].canvas.style.display = 'none';
-        this[_].contexts[this[_].bgcontext].canvas.style.display = 'none';
+        this.vr(V_SPLIT); //this[_].contexts[this[_].fgcontext].canvas.style.display = 'none';
+        //this[_].contexts[this[_].bgcontext].canvas.style.display = 'none';
 
         this[_].xr.enter(mainLoop);
       } else {
@@ -668,7 +668,9 @@ void main() {
       const c = this[_].contexts[this[_].apage];
       const n = x.length;
 
-      if (this[_].xr.activated) {// TODO
+      if (this[_].xr.activated) {
+        // TODO
+        console.log('line', x, y);
       } else if (this[_].vr) {
         const c1 = this.context(1);
         c.strokeStyle = this[_].palette[this[_].color][c1.color];
@@ -715,7 +717,9 @@ void main() {
       const height = Math.abs(y2 - y1);
       const c = this[_].contexts[this[_].apage];
 
-      if (this[_].xr.activated) {// TODO
+      if (this[_].xr.activated) {
+        // TODO
+        console.log('box', x1, y1, x2, y2);
       } else if (this[_].vr) {
         const c1 = this.context(1);
         c.fillStyle = this[_].palette[this[_].color][c1.color];
@@ -850,8 +854,16 @@ void main() {
 
     display2d() {
       if (this[_].xr.activated) {
-        this[_].xr.display2d(); // TODO: Call clients.
+        this[_].xr.display2d();
 
+        const fg = this[_].contexts[2];
+        const c1 = this.context(1);
+        const c2 = this.context(2); //fg.clearRect(0, 0, fg.canvas.width, fg.canvas.height);
+
+        for (let client of this[_].clients) {
+          client(fg, c1);
+          client(fg, c2);
+        }
 
         return;
       }
