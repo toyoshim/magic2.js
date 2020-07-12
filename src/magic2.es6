@@ -171,11 +171,12 @@ attribute vec3 aColor;
 uniform mat4 uTMat;
 uniform mat4 uPMat;
 uniform vec3 uCamera;
+uniform float uContrast;
 varying vec3 vColor;
 
 void main() {
   gl_Position = uPMat * uTMat * vec4(aCoord - uCamera * 100., 1.0);
-  vColor = aColor;
+  vColor = aColor * uContrast;
 }
 `;
 
@@ -303,7 +304,7 @@ class XR {
     }
   }
 
-  display2d() {
+  display2d(contrast) {
     if (!this.views[0])
       return;
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -334,12 +335,16 @@ class XR {
     for (const view of this.views) {
       this.gl.viewport(
           view.port.x, view.port.y, view.port.width, view.port.height);
-      const pmat = this.gl.getUniformLocation(this.program, 'uPMat');
-      this.gl.uniformMatrix4fv(pmat, false, view.pmat);
-      const tmat = this.gl.getUniformLocation(this.program, 'uTMat');
-      this.gl.uniformMatrix4fv(tmat, false, view.tmat);
-      const camera = this.gl.getUniformLocation(this.program, 'uCamera');
-      this.gl.uniform3fv(camera, [view.pos.x, view.pos.y, view.pos.z]);
+      const pmatLocation = this.gl.getUniformLocation(this.program, 'uPMat');
+      this.gl.uniformMatrix4fv(pmatLocation, false, view.pmat);
+      const tmatLocation = this.gl.getUniformLocation(this.program, 'uTMat');
+      this.gl.uniformMatrix4fv(tmatLocation, false, view.tmat);
+      const cameraLocation =
+          this.gl.getUniformLocation(this.program, 'uCamera');
+      this.gl.uniform3fv(cameraLocation, [view.pos.x, view.pos.y, view.pos.z]);
+      const contrastLocation =
+          this.gl.getUniformLocation(this.program, 'uContrast');
+      this.gl.uniform1f(contrastLocation, contrast);
       this.gl.drawElements(
           this.gl.LINES, this.nIndices, this.gl.UNSIGNED_SHORT, 0);
     }
@@ -409,6 +414,7 @@ class Magic2 {
       },
       cext: false,
       color: 15,
+      contrast: 1.0,
       parameters: [0, 0, 0, 0, 0, 0, 0, 0, 0],
       data: {
         pct: 0,
@@ -791,13 +797,13 @@ class Magic2 {
    */
   display2d () {
     if (this[_].xr.activated) {
-      this[_].xr.display2d();
       const fg = this[_].contexts[2];
       const c1 = this.context(1);
       const c2 = this.context(2);
       fg.clearRect(0, 0, fg.canvas.width, fg.canvas.height);
       for (let client of this[_].clients)
         client(fg, [c1, c2]);
+      this[_].xr.display2d(this[_].contrast);
       return;
     }
     const previous = this[_].fgcontext;
@@ -970,6 +976,20 @@ class Magic2 {
   depth (minz, maxz) {
     this[_].depth.minz = minz;
     this[_].depth.maxz = maxz;
+  }
+
+  /**
+   * Extra API: Sets screen contrast.
+   * @param {number} c contrast value from 0 to 15 (initial: 15)
+   */
+  contrast (c) {
+    this[_].contrast = c / 15.0;
+    for (let i = 0; i < 3; ++i) {
+      let context = this[_].contexts[i];
+      if (!context)
+        continue;
+      context.canvas.style.opacity = this[_].contrast;
+    }
   }
 }
 
