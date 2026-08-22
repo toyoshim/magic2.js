@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/toyoshim/magic2.js#readme",
   "devDependencies": {
-    "@babel/core": "^7.10.4",
+    "@babel/core": "^7.29.6",
     "@babel/preset-env": "^7.10.4",
     "gulp": ">=4.0.2",
     "gulp-babel": "^8.0.0",
